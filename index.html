@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Monitor</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        #countdown { font-size: 16px; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>System Monitor</h1>
+    <table id="agents-table">
+        <thead>
+            <tr>
+                <th>Agent ID</th>
+                <th>CPU Usage (%)</th>
+                <th>Memory Usage (%)</th>
+                <th>Last Update</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 表格内容将由JavaScript动态生成 -->
+        </tbody>
+    </table>
+    <div id="countdown">Next update in 10 seconds</div>
+
+    <script>
+        function updateData() {
+            fetch('/api/data')
+                .then(response => response.json())
+                .then(data => {
+                    const tbody = document.querySelector('#agents-table tbody');
+                    tbody.innerHTML = ''; // 清空现有内容
+                    data.forEach(agent => {
+                        const row = `<tr>
+                                        <td>${agent.agent_id}</td>
+                                        <td>${agent.cpu_usage}</td>
+                                        <td>${agent.memory_usage}</td>
+                                        <td>${agent.last_update}</td>
+                                     </tr>`;
+                        tbody.innerHTML += row; // 添加新行
+                    });
+                    resetCountdown(10); // 重置倒计时（这里的数字与 setInterval 的频率相匹配）
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                    resetCountdown(10); // 在发生错误时也重置倒计时
+                });
+        }
+
+        let countdownTimer;
+        function resetCountdown(seconds) {
+            clearInterval(countdownTimer);
+            countdownTimer = setInterval(() => {
+                document.getElementById('countdown').innerText = `Next update in ${seconds} seconds`;
+                seconds--;
+                if (seconds < 0) {
+                    clearInterval(countdownTimer);
+                }
+            }, 1000);
+        }
+
+        // 设置定时器，每10秒更新一次数据
+        setInterval(updateData, 10000);
+
+        // 页面加载时也立即更新一次数据
+        document.addEventListener('DOMContentLoaded', updateData);
+    </script>
+</body>
+</html>
